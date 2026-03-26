@@ -6,6 +6,21 @@ Score your Figma designs for AI-readiness, fix common issues, and generate struc
 
 ![DesignReady.ai Plugin Screenshot](screenshot.png)
 
+## Quick Start
+
+```bash
+git clone https://github.com/designready-ai/designready-ai.git
+cd designready-ai
+npm install
+npm run build
+```
+
+Then load in Figma:
+1. Open Figma Desktop
+2. Go to **Plugins → Development → Import plugin from manifest**
+3. Select the `manifest.json` from this repo
+4. Run "DesignReady.ai" from the Plugins menu
+
 ## Features
 
 - **6-Dimension Scoring** — Naming, Structure, Tokens, Meta, Completeness, Variants
