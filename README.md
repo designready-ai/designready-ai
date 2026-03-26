@@ -2,7 +2,9 @@
 
 **AI-Readiness Scoring & Prompt Generation for Figma Components**
 
-Score your Figma designs for AI-readiness, fix common issues, and generate structured code prompts. Each prompt trains a reusable skill for your design system. DesignReady.ai scores your components across 6 dimensions, tells you what to fix, and builds a cumulative skill for your design system.
+Score your Figma designs for AI-readiness, fix common issues, and generate structured code prompts. Each prompt trains a reusable skill for your design system.
+
+![DesignReady.ai Plugin Screenshot](screenshot.png)
 
 ## Features
 
