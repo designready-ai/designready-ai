@@ -1,0 +1,9 @@
+node_modules/
+dist/
+release/
+coverage/
+/docs/
+.DS_Store
+
+*storybook.log
+storybook-static

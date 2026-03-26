@@ -1,0 +1,47 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Overview/Atomic Design" />
+
+# Atomic Design Classification
+
+DesignReady.ai uses [Brad Frost's Atomic Design](https://bradfrost.com/blog/post/atomic-web-design/) to classify components and determine build order. The classification is based on **component nesting**, not count.
+
+## Levels
+
+| Level | What it is | How to recognize it | Example |
+|-------|-----------|-----------|---------|
+| **Atom** | Smallest building block. Has no child components inside it. | A component that only contains basic elements (text, shapes, icons) | Button, Icon, Badge, Input |
+| **Molecule** | A simple group of atoms working together. | A component where every child component is an atom | SearchBar (Input + Button + Icon) |
+| **Organism** | A complex section containing molecules. | A component that contains at least one molecule | Header (Logo + Nav + SearchBar) |
+| **Unclassified** | Not a component — just a raw frame. | A frame that is not a Component or Instance | Wrapper frames, layout helpers |
+
+## Key Insight
+
+**It's about nesting, not counting.**
+
+A `ProductCard` with 5 child components (Image, Title, Price, Badge, Button) is a **Molecule** — because all its children are atoms (no nested components inside them).
+
+A `Header` with 3 child components (Logo, Navigation, SearchBar) is an **Organism** — because `SearchBar` itself contains `Input` and `Button` (it's a molecule).
+
+## Build Order
+
+Batch Scan uses atomic classification to sort components. Atoms are built first, then composed into molecules, then organisms. This ensures dependencies are built before the components that use them.
+
+| Step | Component | Level | Score |
+|:----:|-----------|-------|:-----:|
+| 1 | Icon | Atom | 92 |
+| 2 | Badge | Atom | 85 |
+| 3 | Button | Atom | 88 |
+| 4 | SearchBar | Molecule | 81 |
+| 5 | Header | Organism | 76 |
+
+## Page Structure — What to scan
+
+A typical Figma page has 5–8 organisms. **Scan organisms individually** or batch them together — never scan an entire page.
+
+| What | Level | Action |
+|------|-------|--------|
+| Header | Organism | Scan individually or batch |
+| ProductGrid | Organism | Scan individually or batch |
+| Footer | Organism | Scan individually or batch |
+| Full page | — | Too large, don't scan |
