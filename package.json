@@ -1,6 +1,18 @@
 {
   "name": "designready-ai",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Score Figma designs for AI-readiness, fix issues, and generate code prompts. Each prompt trains a reusable skill for your design system.",
+  "author": "Stefan Holzheu <design@stefan-holzheu.de>",
+  "license": "MIT",
+  "homepage": "https://github.com/designready-ai/designready-ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/designready-ai/designready-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/designready-ai/designready-ai/issues"
+  },
+  "keywords": ["figma", "figma-plugin", "design-systems", "ai", "code-generation", "react", "typescript"],
   "private": true,
   "type": "module",
   "scripts": {
