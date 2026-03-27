@@ -15,6 +15,7 @@ export function useProfiles() {
       }
       if (msg.type === "profile-saved") {
         setProfiles(msg.profiles);
+        setActiveId((prev) => prev && !msg.profiles.find((p: PluginProfile) => p.id === prev) ? null : prev);
       }
     }
     window.addEventListener("message", handleMessage);
