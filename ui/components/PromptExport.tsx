@@ -80,7 +80,7 @@ export function PromptExport({ promptCompact, score }: PromptExportProps) {
       </p>
 
       <button className={styles.copyBtn} onClick={handleCopy}>
-        {copied ? "Copied!" : "Copy Prompt for Claude"}
+        {copied ? "Copied!" : "Copy Prompt"}
       </button>
 
       <button className={styles.toggle} onClick={() => setExpanded(!expanded)}>
