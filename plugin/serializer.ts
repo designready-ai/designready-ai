@@ -67,7 +67,7 @@ function serializeLayoutGrid(grid: LayoutGrid): SerializedLayoutGrid {
   return result;
 }
 
-export function serializeNode(node: SceneNode, depth = 0): SerializedNode {
+export async function serializeNode(node: SceneNode, depth = 0): Promise<SerializedNode> {
   const result: SerializedNode = {
     id: node.id,
     name: node.name,
@@ -271,6 +271,15 @@ export function serializeNode(node: SceneNode, depth = 0): SerializedNode {
       result.componentDescription = desc.trim();
     }
 
+    // For COMPONENT inside a ComponentSet, use the parent's clean name
+    if (node.type === "COMPONENT" && node.parent?.type === "COMPONENT_SET") {
+      result.componentName = node.parent.name;
+      const variantProps = (node as ComponentNode).variantProperties;
+      if (variantProps && Object.keys(variantProps).length > 0) {
+        result.variantProperties = variantProps;
+      }
+    }
+
     if (node.type === "COMPONENT_SET") {
       const cs = node as ComponentSetNode;
       const propDefs = cs.componentPropertyDefinitions;
@@ -296,7 +305,7 @@ export function serializeNode(node: SceneNode, depth = 0): SerializedNode {
     result.isInstance = true;
     const inst = node as InstanceNode;
     // Use ComponentSet name (clean) instead of variant Component name ("Property 1=value, ...")
-    const mainComp = inst.mainComponent;
+    const mainComp = await inst.getMainComponentAsync();
     if (mainComp?.parent?.type === "COMPONENT_SET") {
       result.componentName = mainComp.parent.name;
       const setDesc = (mainComp.parent as ComponentSetNode).description;
@@ -352,7 +361,7 @@ export function serializeNode(node: SceneNode, depth = 0): SerializedNode {
 
   // Children
   if ("children" in node && depth < MAX_DEPTH) {
-    result.children = (node as FrameNode).children.map((c) => serializeNode(c, depth + 1));
+    result.children = await Promise.all((node as FrameNode).children.map((c) => serializeNode(c, depth + 1)));
   }
 
   return result;

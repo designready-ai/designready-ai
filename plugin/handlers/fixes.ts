@@ -94,7 +94,7 @@ function suggestIconName(node: SceneNode): string {
   return "icon";
 }
 
-function suggestName(node: SceneNode): string {
+async function suggestName(node: SceneNode): Promise<string> {
   if (node.type === "TEXT") {
     const text = (node as TextNode).characters.trim();
     if (text) {
@@ -116,7 +116,7 @@ function suggestName(node: SceneNode): string {
   }
 
   if (node.type === "INSTANCE") {
-    const comp = (node as InstanceNode).mainComponent;
+    const comp = await (node as InstanceNode).getMainComponentAsync();
     if (comp) return comp.name.toLowerCase().replace(/[\s/]+/g, "-");
   }
 
@@ -172,9 +172,9 @@ function suggestName(node: SceneNode): string {
   return "element";
 }
 
-function collectRenames(node: SceneNode, ancestors: string[], results: RenameEntry[]): void {
+async function collectRenames(node: SceneNode, ancestors: string[], results: RenameEntry[]): Promise<void> {
   if (isGenericName(node.name)) {
-    const suggested = suggestName(node);
+    const suggested = await suggestName(node);
     if (suggested.toLowerCase() !== node.name.toLowerCase()) {
       results.push({
         nodeId: node.id,
@@ -187,7 +187,7 @@ function collectRenames(node: SceneNode, ancestors: string[], results: RenameEnt
 
   if ("children" in node) {
     for (const child of (node as FrameNode).children) {
-      collectRenames(child, [...ancestors, node.name], results);
+      await collectRenames(child, [...ancestors, node.name], results);
     }
   }
 }
@@ -240,7 +240,7 @@ export async function handleFixMessage(msg: PluginMessage): Promise<boolean> {
       const selection = figma.currentPage.selection;
       if (selection.length === 0) return true;
       const entries: RenameEntry[] = [];
-      collectRenames(selection[0], [], entries);
+      await collectRenames(selection[0], [], entries);
       const response: PluginMessage = { type: "renames-result", entries };
       figma.ui.postMessage(response);
       return true;

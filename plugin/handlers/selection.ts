@@ -1,7 +1,7 @@
 import { serializeNode } from "../serializer";
 import type { PluginMessage, ViewportVariant } from "../../shared/types";
 
-export function sendSelection(): void {
+export async function sendSelection(): Promise<void> {
   const selection = figma.currentPage.selection;
   if (selection.length === 0) {
     const msg: PluginMessage = { type: "no-selection" };
@@ -21,11 +21,11 @@ export function sendSelection(): void {
     }
   }
 
-  const serialized = serializeNode(node);
+  const serialized = await serializeNode(node);
   const msg: PluginMessage = {
     type: "selection-change",
     node: serialized,
-    name: node.name,
+    name: resolvedFromSet ? selection[0].name : node.name,
     selectionCount: selection.length,
     resolvedFromComponentSet: resolvedFromSet,
     componentSetName: resolvedFromSet ? selection[0].name : undefined,
@@ -65,7 +65,7 @@ function extractBaseName(name: string): string {
     .trim();
 }
 
-function findVariants(selectedNode: SceneNode, resolvedNode?: SceneNode): ViewportVariant[] {
+async function findVariants(selectedNode: SceneNode, resolvedNode?: SceneNode): Promise<ViewportVariant[]> {
   const page = figma.currentPage;
   const baseName = extractBaseName(selectedNode.name);
   const variants: ViewportVariant[] = [];
@@ -88,7 +88,7 @@ function findVariants(selectedNode: SceneNode, resolvedNode?: SceneNode): Viewpo
       width: Math.round(siblingResolved.width),
       height: Math.round(siblingResolved.height),
       viewportType: detectViewportType(siblingResolved.width),
-      node: serializeNode(siblingResolved),
+      node: await serializeNode(siblingResolved),
     });
   }
 
@@ -112,20 +112,20 @@ function resolveNode(node: SceneNode): SceneNode {
   return node;
 }
 
-function sendBatchSelection(): void {
+async function sendBatchSelection(): Promise<void> {
   const selection = figma.currentPage.selection;
-  const nodes = selection.map((node) => serializeNode(resolveNode(node)));
+  const nodes = await Promise.all(selection.map((node) => serializeNode(resolveNode(node))));
   const msg: PluginMessage = { type: "batch-selection-result", nodes };
   figma.ui.postMessage(msg);
 }
 
-export function handleSelectionMessage(msg: PluginMessage): boolean {
+export async function handleSelectionMessage(msg: PluginMessage): Promise<boolean> {
   switch (msg.type) {
     case "request-selection":
-      sendSelection();
+      await sendSelection();
       return true;
     case "request-batch-selection":
-      sendBatchSelection();
+      await sendBatchSelection();
       return true;
     case "request-variants": {
       const selection = figma.currentPage.selection;
@@ -133,7 +133,7 @@ export function handleSelectionMessage(msg: PluginMessage): boolean {
       const original = selection[0];
       const resolved = resolveNode(original);
       // Use original for sibling matching (page-level), resolved for dimensions
-      const variants = findVariants(original, resolved !== original ? resolved : undefined);
+      const variants = await findVariants(original, resolved !== original ? resolved : undefined);
       const response: PluginMessage = { type: "variants-result", variants };
       figma.ui.postMessage(response);
       return true;

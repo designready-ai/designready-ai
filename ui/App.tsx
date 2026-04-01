@@ -91,7 +91,7 @@ export function App() {
             </div>
             <div className="empty-title">
               {/* eslint-disable-next-line react-hooks/refs -- intentional */}
-              {selectedNode ? `Selected: ${selectionName || lastNameRef.current}` : "Select a frame"}
+              {selectedNode ? `Selected: ${selectedNode.componentName || selectionName || lastNameRef.current}` : "Select a frame"}
             </div>
             <div className="empty-hint">
               Score your Figma designs for AI-readiness, fix common issues, and generate structured code prompts. Each prompt trains a reusable skill for your design system.
@@ -135,16 +135,13 @@ export function App() {
               size={14}
             />
           )}
-          {/* eslint-disable-next-line react-hooks/refs -- intentional: show last known name */}
           <span
             className="topbar-component-name"
             style={result?.atomicInfo ? { color: LEVEL_CONFIG[result.atomicInfo.level]?.color } : undefined}
           >
-            {selectionName || lastNameRef.current || "—"}
+            {/* eslint-disable-next-line react-hooks/refs -- intentional: show last known name */}
+            {selectedNode?.componentName || selectionName || lastNameRef.current || "—"}
           </span>
-          {resolvedFromComponentSet && (
-            <span className="topbar-hint">from &ldquo;{componentSetName}&rdquo;</span>
-          )}
         </div>
 
         <div className="topbar-actions">

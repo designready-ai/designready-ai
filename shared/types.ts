@@ -223,6 +223,7 @@ export interface AtomicInfo {
   subComponents: string[];
   significantFrames: string[]; // structural frame names (when not componentized)
   dependencyTree: DependencyNode | null;
+  variantProperties?: Record<string, string>; // e.g. { Priority: "Primary", Variant: "Filled" }
 }
 
 export interface ExportPlanItem {

@@ -19,7 +19,7 @@ figma.on("selectionchange", sendSelection);
 
 figma.ui.onmessage = async (msg: PluginMessage) => {
   // Try each handler domain — first match wins
-  if (handleSelectionMessage(msg)) return;
+  if (await handleSelectionMessage(msg)) return;
   if (await handleProfileMessage(msg)) return;
   if (await handleFigmaImportMessage(msg)) return;
   if (await handleFixMessage(msg)) return;
