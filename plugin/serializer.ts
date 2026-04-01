@@ -305,14 +305,17 @@ export async function serializeNode(node: SceneNode, depth = 0): Promise<Seriali
     result.isInstance = true;
     const inst = node as InstanceNode;
     // Use ComponentSet name (clean) instead of variant Component name ("Property 1=value, ...")
-    const mainComp = await inst.getMainComponentAsync();
+    let mainComp: ComponentNode | null = null;
+    try {
+      mainComp = await inst.getMainComponentAsync();
+    } catch { /* main component unavailable (external library, no access) */ }
     if (mainComp?.parent?.type === "COMPONENT_SET") {
       result.componentName = mainComp.parent.name;
       const setDesc = (mainComp.parent as ComponentSetNode).description;
       if (setDesc && setDesc.trim()) result.componentDescription = setDesc.trim();
-    } else {
-      result.componentName = mainComp?.name;
-      if (mainComp?.description?.trim()) result.componentDescription = mainComp.description.trim();
+    } else if (mainComp) {
+      result.componentName = mainComp.name;
+      if (mainComp.description?.trim()) result.componentDescription = mainComp.description.trim();
     }
     const variantProps = inst.variantProperties;
     if (variantProps && Object.keys(variantProps).length > 0) {
@@ -359,9 +362,19 @@ export async function serializeNode(node: SceneNode, depth = 0): Promise<Seriali
     } catch { /* componentProperties not available on all instances */ }
   }
 
-  // Children
+  // Children — catch per child so one broken node doesn't block the parent
   if ("children" in node && depth < MAX_DEPTH) {
-    result.children = await Promise.all((node as FrameNode).children.map((c) => serializeNode(c, depth + 1)));
+    result.children = (await Promise.all(
+      (node as FrameNode).children.map((c) =>
+        serializeNode(c, depth + 1).catch(() => ({
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          width: "width" in c ? Math.round(c.width as number) : 0,
+          height: "height" in c ? Math.round(c.height as number) : 0,
+        } as SerializedNode))
+      )
+    ));
   }
 
   return result;
