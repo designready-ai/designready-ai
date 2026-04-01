@@ -199,6 +199,7 @@ export function analyzeAtomic(node: SerializedNode): AtomicInfo {
     subComponents: data.subComponents,
     significantFrames,
     dependencyTree,
+    variantProperties: node.variantProperties,
   };
 }
 

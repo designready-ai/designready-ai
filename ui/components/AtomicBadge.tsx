@@ -208,6 +208,11 @@ export function AtomicBadge({ info, exportPlan }: AtomicBadgeProps) {
               <span className={styles.badgeLabel}>{isUnclassified ? config.label : info.name}</span>
             </span>
           </div>
+          {!isUnclassified && info.variantProperties && Object.keys(info.variantProperties).length > 0 && (
+            <span className={styles.variantHint}>
+              {Object.values(info.variantProperties).join(" · ")}
+            </span>
+          )}
           <p className={styles.description}>{config.description}</p>
           <div className={styles.statsRow}>
             <span>{info.componentCount} component{info.componentCount !== 1 ? "s" : ""}</span>

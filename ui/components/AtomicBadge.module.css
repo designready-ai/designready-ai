@@ -55,6 +55,14 @@
   line-height: 130%;
 }
 
+.variantHint {
+  font-size: var(--dr-text-xs);
+  font-weight: var(--dr-weight-semibold);
+  line-height: 130%;
+  color: var(--figma-color-text-tertiary, #666);
+  margin-top: calc(-1 * var(--dr-space-sm));
+}
+
 .description {
   font-size: var(--dr-text-md);
   font-weight: var(--dr-weight-regular);
