@@ -280,6 +280,10 @@ This means every scan can improve your design system skill — without manual ma
 - **Testing:** Vitest + @vitest/coverage-v8 (105 tests)
 - **Linting:** ESLint 9 + Prettier
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes and version history.
+
 ## License
 
 MIT — see [LICENSE](LICENSE)
