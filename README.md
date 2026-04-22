@@ -154,6 +154,22 @@ Page (don't scan this)
 - A typical page has 5–8 organisms — that's normal, not a problem
 - Each organism should be its own Figma Component or clearly named Frame
 
+### ComponentSet Variants
+
+When you select a ComponentSet, DesignReady.ai scans the **Default variant** as a full layout tree and adds the other variants as metadata only — a list of available properties and their values (e.g. `variants(state:[default|hover|disabled] size:[sm|md|lg])`). Claude is instructed to implement state-like properties as CSS pseudo-classes.
+
+**This works well for:**
+- `state=hover | focus | active | disabled | pressed` — pure styling differences
+- `size=sm | md | lg` with linearly scaled padding and typography
+- Color-only variants (`variant=primary | secondary | ghost`)
+
+**This misses structural differences:**
+- `state=loading` with an added spinner node
+- `state=error` with an extra error icon and message
+- `state=empty` with a completely different layout
+
+For structurally different variants, **select each variant individually** in the ComponentSet and run **Batch Scan**. Every selected variant becomes its own full tree in the batch prompt, so Claude sees the layout differences directly.
+
 ### Profile Tips
 
 - **Import from Figma first** — Variables and Paint Styles import automatically. This gives you tokens without manual entry.
