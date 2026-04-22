@@ -4,7 +4,7 @@
 ```
 npm run dev       # Watch mode (UI + plugin)
 npm run build     # Production → dist/
-npm test          # Vitest (85 tests)
+npm test          # Vitest (86 tests)
 npm run lint      # ESLint 9
 ```
 
@@ -27,4 +27,4 @@ npm run lint      # ESLint 9
 - **Official:** github.com/designready-ai/designready-ai (push here)
 - **Dev:** github.com/Lapse18/designready-ai-plugin
 - Remotes: `origin` = Lapse18, `official` = designready-ai
-- CLAUDE.md is .gitignored — local only, never committed.
+- Push workflow: work on `official-updates`, then `git push official official-updates:main`.

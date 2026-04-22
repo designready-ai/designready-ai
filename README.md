@@ -243,11 +243,11 @@ Communication between Plugin and UI is exclusively via `postMessage` with a type
 | Completeness | 15% | Component states, variant properties |
 | Variants | 15% | Size variants, state coverage, property naming |
 
-Prompts are generated when score reaches **75+**.
+Prompts are generated when score reaches **75+** (60+ average for batch prompts).
 
 ## Skill Sync
 
-When a Design System Profile is active, every prompt includes a `## skill-sync` block that instructs Claude to:
+When a Design System Profile is active, every prompt includes a `# TASK 2 — Skill Sync` block that instructs Claude to:
 
 1. Check if a skill file exists for your design system
 2. If not — ask to create one from the profile context
@@ -261,7 +261,7 @@ This means every scan can improve your design system skill — without manual ma
 - **Plugin:** TypeScript, esbuild
 - **UI:** React 19, TypeScript, Vite (singlefile build)
 - **Styling:** CSS with Dark Theme (Figma-native tokens)
-- **Testing:** Vitest + @vitest/coverage-v8 (84 tests)
+- **Testing:** Vitest + @vitest/coverage-v8 (86 tests)
 - **Linting:** ESLint 9 + Prettier
 
 ## License
