@@ -261,7 +261,7 @@ This means every scan can improve your design system skill — without manual ma
 - **Plugin:** TypeScript, esbuild
 - **UI:** React 19, TypeScript, Vite (singlefile build)
 - **Styling:** CSS with Dark Theme (Figma-native tokens)
-- **Testing:** Vitest + @vitest/coverage-v8 (86 tests)
+- **Testing:** Vitest + @vitest/coverage-v8 (91 tests)
 - **Linting:** ESLint 9 + Prettier
 
 ## License

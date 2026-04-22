@@ -52,10 +52,10 @@ function findDefaultVariant(componentSet: ComponentSetNode): ComponentNode | nul
 }
 
 function detectViewportType(width: number): "mobile" | "tablet" | "desktop" | "unknown" {
+  if (width <= 0) return "unknown";
   if (width <= 428) return "mobile";
   if (width <= 1024) return "tablet";
-  if (width >= 1200) return "desktop";
-  return "unknown";
+  return "desktop";
 }
 
 function extractBaseName(name: string): string {
