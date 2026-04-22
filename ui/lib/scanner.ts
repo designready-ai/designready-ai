@@ -19,6 +19,7 @@ export function scan(
   node: SerializedNode,
   variants?: ViewportVariant[],
   profile?: PluginProfile | null,
+  opts?: { skipSkillSync?: boolean },
 ): ScanResult {
   const naming = scoreNaming(node);
   const structure = scoreStructure(node);
@@ -61,7 +62,7 @@ export function scan(
   const atomicInfo = analyzeAtomic(node);
   const exportPlan = buildExportPlan([atomicInfo]);
 
-  const promptOpts = { variants, profile, atomicInfo };
+  const promptOpts = { variants, profile, atomicInfo, skipSkillSync: opts?.skipSkillSync };
   const promptCompact = score >= 75 ? generateCompactPrompt(node, promptOpts) : undefined;
 
   return {

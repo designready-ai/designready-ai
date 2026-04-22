@@ -19,7 +19,7 @@ export function batchScan(
 ): BatchScanResult {
   const items: BatchItemResult[] = nodes.map((node) => {
     const atomicInfo = analyzeAtomic(node);
-    const scanResult = scan(node, undefined, profile);
+    const scanResult = scan(node, undefined, profile, { skipSkillSync: true });
     return {
       name: node.componentName ?? node.name,
       nodeId: node.id,
@@ -73,13 +73,11 @@ function generateBatchPromptCompact(items: BatchItemResult[], profile?: PluginPr
   });
   lines.push("");
 
-  // Include individual compact prompts (strip per-component skill-sync — batch has its own)
+  // Include individual compact prompts (skill-sync skipped at generation — batch has its own at the end)
   for (const item of items) {
     if (item.scanResult.promptCompact) {
       lines.push("---");
-      // Remove embedded skill-sync blocks — batch prompt handles this centrally
-      const cleaned = item.scanResult.promptCompact.replace(/\n## skill-sync[\s\S]*$/, "");
-      lines.push(cleaned);
+      lines.push(item.scanResult.promptCompact);
     }
   }
 

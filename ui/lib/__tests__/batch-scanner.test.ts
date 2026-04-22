@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { batchScan } from "../batch-scanner";
-import type { SerializedNode } from "../../../shared/types";
+import type { SerializedNode, PluginProfile } from "../../../shared/types";
 
 function makeNode(name: string, overrides?: Partial<SerializedNode>): SerializedNode {
   return { id: Math.random().toString(36), name, type: "FRAME", ...overrides };
@@ -75,5 +75,48 @@ describe("batchScan", () => {
     const result = batchScan([]);
     expect(result.items).toHaveLength(0);
     expect(result.averageScore).toBe(0);
+  });
+
+  it("includes skill-sync block exactly once in batch prompt (not per component)", () => {
+    const profile: PluginProfile = {
+      id: "test-profile",
+      name: "Test System",
+      stack: "React+TS+CSS",
+      tokens: {},
+      guidelines: "",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    const makeHighScoringCard = (id: string, name: string): SerializedNode =>
+      makeNode(name, {
+        id,
+        layoutMode: "VERTICAL",
+        itemSpacing: 8,
+        paddingTop: 16,
+        paddingRight: 16,
+        paddingBottom: 16,
+        paddingLeft: 16,
+        width: 320,
+        height: 200,
+        fills: [{ type: "SOLID", color: { r: 255, g: 255, b: 255 }, boundToVariable: true }],
+        children: [
+          makeNode("title", { type: "TEXT", characters: "Card", fontSize: 18 }),
+          makeNode("body", { type: "TEXT", characters: "Text", fontSize: 14 }),
+        ],
+      });
+
+    const nodes = [
+      makeHighScoringCard("c1", "card-one"),
+      makeHighScoringCard("c2", "card-two"),
+      makeHighScoringCard("c3", "card-three"),
+    ];
+
+    const result = batchScan(nodes, profile);
+    expect(result.batchPromptCompact).toBeDefined();
+
+    const prompt = result.batchPromptCompact!;
+    const skillSyncMatches = prompt.match(/# TASK 2 — Skill Sync/g) ?? [];
+    expect(skillSyncMatches).toHaveLength(1);
   });
 });
