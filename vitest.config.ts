@@ -4,7 +4,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["ui/lib/__tests__/**/*.test.ts"],
+    include: ["ui/lib/__tests__/**/*.test.ts", "plugin/**/__tests__/**/*.test.ts"],
     coverage: {
       provider: "v8",
       include: ["ui/lib/**/*.ts"],

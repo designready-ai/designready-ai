@@ -31,7 +31,7 @@ Then load in Figma:
 - **Auto Layout Fix** — Confidence-based analysis + one-click apply (bottom-up, skips icons/overlaps). Frames below 60% confidence are listed as skipped with the reason (inconsistent spacing, ambiguous direction, overlapping children).
 - **Quick Fixes** — Auto-rename generic layers, convert dividers, delete hidden/empty nodes
 - **Atomic Detection** — Classifies components as atom/molecule/organism with dependency tree and build order
-- **Responsive Detection** — Auto-detect viewport variants from sibling frames
+- **Responsive Detection** — Auto-detect viewport variants from sibling frames. Matches name suffixes like `-mobile`, `-tablet`, `-desktop`, `-xs`/`-sm`/`-md`/`-lg`/`-xl`/`-2xl`/`-3xl`, and common widths (`-375`, `-768`, `-1024`, `-1280`, `-1440`, etc.)
 - **Prompt Injection Protection** — Layer names and text content are sanitized before embedding
 
 ## Usage
@@ -261,7 +261,7 @@ This means every scan can improve your design system skill — without manual ma
 - **Plugin:** TypeScript, esbuild
 - **UI:** React 19, TypeScript, Vite (singlefile build)
 - **Styling:** CSS with Dark Theme (Figma-native tokens)
-- **Testing:** Vitest + @vitest/coverage-v8 (91 tests)
+- **Testing:** Vitest + @vitest/coverage-v8 (105 tests)
 - **Linting:** ESLint 9 + Prettier
 
 ## License

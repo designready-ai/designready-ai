@@ -58,10 +58,20 @@ function detectViewportType(width: number): "mobile" | "tablet" | "desktop" | "u
   return "desktop";
 }
 
-function extractBaseName(name: string): string {
+// Breakpoint labels commonly used in design systems (Tailwind/Bootstrap + full words).
+// Single-letter tokens (s/m/l) are deliberately excluded — too many false positives.
+const VIEWPORT_SUFFIXES = "xs|sm|md|lg|xl|xxl|2xl|3xl|mobile|tablet|desktop|phone|laptop";
+
+// Explicit allowlist of common Figma frame widths (iOS, iPad, common desktop presets).
+// Only these numeric suffixes strip — arbitrary numbers like `Icon-v2-512` are left alone.
+const VIEWPORT_WIDTHS = "320|360|375|390|414|428|480|540|640|768|820|834|1024|1194|1280|1366|1440|1536|1920|2560";
+
+const VIEWPORT_TOKEN = `${VIEWPORT_SUFFIXES}|${VIEWPORT_WIDTHS}`;
+
+export function extractBaseName(name: string): string {
   return name
-    .replace(/\s*[/\-_]\s*(desktop|mobile|tablet|sm|md|lg|xl|xxl)\s*$/i, "")
-    .replace(/\s*\(\s*(desktop|mobile|tablet|sm|md|lg|xl|xxl)\s*\)\s*$/i, "")
+    .replace(new RegExp(`\\s*[/\\-_]\\s*(${VIEWPORT_TOKEN})\\s*$`, "i"), "")
+    .replace(new RegExp(`\\s*\\(\\s*(${VIEWPORT_TOKEN})\\s*\\)\\s*$`, "i"), "")
     .trim();
 }
 
