@@ -1,5 +1,6 @@
 import { serializeNode } from "../serializer";
 import type { PluginMessage, ViewportVariant } from "../../shared/types";
+import { detectViewport } from "../../shared/viewport";
 
 export async function sendSelection(): Promise<void> {
   const selection = figma.currentPage.selection;
@@ -51,13 +52,6 @@ function findDefaultVariant(componentSet: ComponentSetNode): ComponentNode | nul
   return first ?? null;
 }
 
-function detectViewportType(width: number): "mobile" | "tablet" | "desktop" | "unknown" {
-  if (width <= 0) return "unknown";
-  if (width <= 428) return "mobile";
-  if (width <= 1024) return "tablet";
-  return "desktop";
-}
-
 // Breakpoint labels commonly used in design systems (Tailwind/Bootstrap + full words).
 // Single-letter tokens (s/m/l) are deliberately excluded — too many false positives.
 const VIEWPORT_SUFFIXES = "xs|sm|md|lg|xl|xxl|2xl|3xl|mobile|tablet|desktop|phone|laptop";
@@ -97,7 +91,7 @@ async function findVariants(selectedNode: SceneNode, resolvedNode?: SceneNode): 
       name: child.name,
       width: Math.round(siblingResolved.width),
       height: Math.round(siblingResolved.height),
-      viewportType: detectViewportType(siblingResolved.width),
+      viewportType: detectViewport(siblingResolved.width),
       node: await serializeNode(siblingResolved),
     });
   }
@@ -109,7 +103,7 @@ async function findVariants(selectedNode: SceneNode, resolvedNode?: SceneNode): 
     name: selectedNode.name,
     width: Math.round(current.width),
     height: Math.round(current.height),
-    viewportType: detectViewportType(current.width),
+    viewportType: detectViewport(current.width),
   });
 
   return variants;

@@ -113,15 +113,6 @@ export function collectTokens(node: SerializedNode): CollectedTokens {
   };
 }
 
-// ── Viewport Detection ──
-
-export function viewportTag(width: number): string {
-  if (width <= 0) return "unknown";
-  if (width <= 428) return "mobile";
-  if (width <= 1024) return "tablet";
-  return "desktop";
-}
-
 // ── Atomic Level Rendering ──
 
 export function renderAtomicCompact(atomicInfo: AtomicInfo): string {

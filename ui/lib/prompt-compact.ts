@@ -1,4 +1,5 @@
 import type { SerializedNode, PluginProfile } from "../../shared/types";
+import { detectViewport } from "../../shared/viewport";
 import { sanitizeName, sanitizeText } from "./sanitize";
 import { colorToHex } from "./utils";
 import {
@@ -6,7 +7,6 @@ import {
   isDivider,
   isIconFrame,
   collectTokens,
-  viewportTag,
   renderAtomicCompact,
   renderProfileCompact,
 } from "./prompt-shared";
@@ -278,14 +278,14 @@ export function generateCompactPrompt(node: SerializedNode, options: PromptOptio
   }
 
   // Viewport
-  const vp = viewportTag(node.width ?? 0);
+  const vp = detectViewport(node.width ?? 0);
   lines.push(`## viewport: ${vp} ${node.width}×${node.height}`);
 
   // Multi-variant
   if (options.variants && options.variants.length > 1) {
     const others = options.variants.filter((v) => v.nodeId !== node.id);
     if (others.length > 0) {
-      lines.push(`also: ${others.map((v) => `${viewportTag(v.width)} ${v.width}×${v.height}`).join(", ")}`);
+      lines.push(`also: ${others.map((v) => `${detectViewport(v.width)} ${v.width}×${v.height}`).join(", ")}`);
     }
   }
   lines.push("");
@@ -299,7 +299,7 @@ export function generateCompactPrompt(node: SerializedNode, options: PromptOptio
   if (options.variants && options.variants.length > 1) {
     for (const v of options.variants) {
       if (!v.node || v.nodeId === node.id) continue;
-      lines.push(`## tree:${viewportTag(v.width)} ${v.width}px`);
+      lines.push(`## tree:${detectViewport(v.width)} ${v.width}px`);
       lines.push(compactNode(v.node, 0, 12));
       lines.push("");
     }

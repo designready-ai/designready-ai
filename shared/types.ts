@@ -1,5 +1,8 @@
 // ── Scoring dimensions & weights (shared between scanner + UI) ──
 
+import type { ViewportType } from "./viewport";
+export type { ViewportType } from "./viewport";
+
 export type ScoringDimension = "naming" | "structure" | "tokens" | "meta" | "completeness" | "variants";
 
 export const SCORE_WEIGHTS: Record<ScoringDimension, number> = {
@@ -197,7 +200,7 @@ export interface ViewportVariant {
   name: string;
   width: number;
   height: number;
-  viewportType: "mobile" | "tablet" | "desktop" | "unknown";
+  viewportType: ViewportType;
   node?: SerializedNode;
 }
 

@@ -12,6 +12,7 @@ npm run lint      # ESLint 9
 - **plugin/** → Figma sandbox (no DOM, no fetch). Only Figma API.
 - **ui/** → React iframe (no figma.*). Only `parent.postMessage`.
 - **shared/types.ts** → All message types + SerializedNode.
+- **shared/viewport.ts** → Pure utilities usable from both sandboxes (e.g. viewport classification).
 - Communication: typed `PluginMessage` via postMessage only.
 
 ## Hard Rules
