@@ -6,6 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.1.1] — 2026-04-22
+
+Completion patch for v1.1.0 — a post-release audit caught that the viewport gap fix was partial.
+
+### Fixed
+- **Viewport gap fix was incomplete in v1.1.0.** The scoring-meta module (`ui/lib/scoring-meta.ts`) carried a third hand-duplicated copy of the viewport cascade that the P3.3 deduplication did not catch. Consequence: frames between 1025 and 1199px (iPad Pro landscape at 1180/1194, Bootstrap containers at 1128, mid-desktops at 1100) were still classified as `"unknown"` in Meta scoring and received a score penalty. Fixed by importing `detectViewport` from `shared/viewport.ts` — the shared module is now truly the single source of truth.
+- **README responsive-detection list** was missing `-phone` and `-laptop` suffixes. The code always recognised them; the list now matches.
+
+### Changed
+- Test `scoring-meta.test.ts > "detects unknown viewport"` rewritten as `"classifies mid-desktop widths (1025-1199px) as desktop, no penalty"`. Previous test asserted the buggy behaviour as correct, which is why the bug survived v1.1.0 despite the test suite being green.
+
 ## [1.1.0] — 2026-04-22
 
 Maintenance and quality release based on a full README-vs-code audit. One real bug fix in batch prompts, several documentation corrections, and an expanded responsive detection.
@@ -45,6 +56,7 @@ Initial public release.
 - Responsive viewport detection from sibling frames
 - Prompt injection protection via sanitisation of layer names and text content
 
-[Unreleased]: https://github.com/designready-ai/designready-ai/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/designready-ai/designready-ai/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/designready-ai/designready-ai/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/designready-ai/designready-ai/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/designready-ai/designready-ai/releases/tag/v1.0.0

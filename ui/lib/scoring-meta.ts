@@ -1,4 +1,5 @@
 import type { SerializedNode, ScanIssue } from "../../shared/types";
+import { detectViewport, type ViewportType } from "../../shared/viewport";
 import { buildPath } from "./utils";
 
 export interface MetaResult {
@@ -12,15 +13,12 @@ export interface MetaResult {
 }
 
 interface ViewportInfo {
-  type: "mobile" | "tablet" | "desktop" | "unknown";
+  type: ViewportType;
   width: number;
 }
 
-function detectViewport(width: number): ViewportInfo {
-  if (width <= 428) return { type: "mobile", width };
-  if (width <= 1024) return { type: "tablet", width };
-  if (width >= 1200) return { type: "desktop", width };
-  return { type: "unknown", width };
+function detectViewportInfo(width: number): ViewportInfo {
+  return { type: detectViewport(width), width };
 }
 
 const DIVIDER_NAME_PATTERN = /divider|separator|line|hr|col-?div|rule|h-?rule|border|sep\b|stroke/;
@@ -127,7 +125,7 @@ export function scoreMeta(node: SerializedNode): MetaResult {
   let score = 80; // base
 
   // Viewport detection
-  const viewport = node.width ? detectViewport(node.width) : null;
+  const viewport = node.width ? detectViewportInfo(node.width) : null;
 
   // Hidden layers
   if (state.hiddenLayers.length > 0) {

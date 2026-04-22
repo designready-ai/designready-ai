@@ -61,13 +61,13 @@ describe("scoreMeta", () => {
     expect(result.issues.some((i) => i.id.startsWith("meta-divider-frame-"))).toBe(true);
   });
 
-  it("detects unknown viewport", () => {
-    // 1100px is between tablet (≤1024) and desktop (≥1200) — "unknown"
-    const node = makeNode("odd-frame", { width: 1100 });
+  it("classifies mid-desktop widths (1025-1199px) as desktop, no penalty", () => {
+    // Regression guard for v1.1.1: previously 1025-1199 fell into "unknown" here
+    // because scoring-meta carried a local duplicate of the viewport cascade.
+    const node = makeNode("mid-desktop-frame", { width: 1100 });
     const result = scoreMeta(node);
-    expect(result.score).toBeLessThan(80);
-    expect(result.stats.viewport?.type).toBe("unknown");
-    expect(result.issues.some((i) => i.id.startsWith("meta-unknown-viewport-"))).toBe(true);
+    expect(result.stats.viewport?.type).toBe("desktop");
+    expect(result.issues.some((i) => i.id.startsWith("meta-unknown-viewport-"))).toBe(false);
   });
 
   it("detects inconsistent spacing", () => {
