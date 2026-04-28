@@ -146,7 +146,7 @@ export async function handleSelectionMessage(msg: PluginMessage): Promise<boolea
       figma.ui.resize(Math.max(320, Math.round(msg.width)), Math.max(400, Math.round(msg.height)));
       return true;
     case "select-node": {
-      const target = figma.getNodeById(msg.nodeId);
+      const target = await figma.getNodeByIdAsync(msg.nodeId);
       if (target && "type" in target && target.type !== "DOCUMENT" && target.type !== "PAGE") {
         const sceneNode = target as SceneNode;
         figma.currentPage.selection = [sceneNode];

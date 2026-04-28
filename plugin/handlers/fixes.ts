@@ -195,7 +195,7 @@ async function collectRenames(node: SceneNode, ancestors: string[], results: Ren
 async function applyRenames(entries: RenameEntry[]): Promise<number> {
   let count = 0;
   for (const entry of entries) {
-    const node = figma.getNodeById(entry.nodeId);
+    const node = await figma.getNodeByIdAsync(entry.nodeId);
     if (node && "name" in node) {
       node.name = entry.newName;
       count++;
@@ -207,10 +207,10 @@ async function applyRenames(entries: RenameEntry[]): Promise<number> {
   return count;
 }
 
-function convertDividers(nodeIds: string[]): number {
+async function convertDividers(nodeIds: string[]): Promise<number> {
   let count = 0;
   for (const id of nodeIds) {
-    const target = figma.getNodeById(id);
+    const target = await figma.getNodeByIdAsync(id);
     if (!target) continue;
     if (target.type !== "FRAME" && target.type !== "COMPONENT" && target.type !== "GROUP") continue;
 
@@ -257,7 +257,7 @@ export async function handleFixMessage(msg: PluginMessage): Promise<boolean> {
       // parent deletion invalidating child references
       const targets: SceneNode[] = [];
       for (const id of msg.nodeIds) {
-        const target = figma.getNodeById(id);
+        const target = await figma.getNodeByIdAsync(id);
         if (target && "remove" in target && target.type !== "DOCUMENT" && target.type !== "PAGE") {
           targets.push(target as SceneNode);
         }
@@ -296,7 +296,7 @@ export async function handleFixMessage(msg: PluginMessage): Promise<boolean> {
       return true;
     }
     case "convert-dividers": {
-      const count = convertDividers(msg.nodeIds);
+      const count = await convertDividers(msg.nodeIds);
       const converted: PluginMessage = { type: "dividers-converted", count };
       figma.ui.postMessage(converted);
       setTimeout(() => sendSelection(), 100);
