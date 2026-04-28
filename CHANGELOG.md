@@ -6,6 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.1.3] — 2026-04-28
+
+Restores manifest fields required for the Figma Community publish to update the existing listing rather than create a new plugin entry.
+
+### Fixed
+- **`manifest.json` was missing the publish-side `id` and `networkAccess`.** The public repo's manifest historically used `"id": "designready-ai"` (a development identifier), but the version originally submitted to Figma Community used the numeric Community resource ID `"1619643293052051000"` plus `"networkAccess": { "allowedDomains": ["none"] }`. v1.1.2 added `documentAccess: "dynamic-page"` but did not restore the other two fields. Re-publishing without them would cause Figma to treat the upload as a new plugin instead of an update to the existing review submission. Both fields are now restored.
+
 ## [1.1.2] — 2026-04-28
 
 Compatibility fix surfaced by Figma Community review: the plugin used synchronous node lookups that throw in dynamic-page documentAccess mode.
@@ -66,7 +73,8 @@ Initial public release.
 - Responsive viewport detection from sibling frames
 - Prompt injection protection via sanitisation of layer names and text content
 
-[Unreleased]: https://github.com/designready-ai/designready-ai/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/designready-ai/designready-ai/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/designready-ai/designready-ai/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/designready-ai/designready-ai/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/designready-ai/designready-ai/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/designready-ai/designready-ai/compare/v1.0.0...v1.1.0
