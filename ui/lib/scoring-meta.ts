@@ -38,9 +38,11 @@ function walkTree(node: SerializedNode, ancestors: string[], state: WalkState, i
     state.hiddenLayers.push({ id: node.id, name: node.name, path });
   }
 
-  // Empty frames (frames with no children) — distinguish spacer vs placeholder
+  // Empty frames (frames with no children) — distinguish spacer vs placeholder.
+  // Skip nodes inside instances: their structure is read-only, so flagged
+  // empty/divider/spacer frames cannot be acted on by the Quick Fix buttons.
   const isFrame = node.type === "FRAME" || node.type === "COMPONENT" || node.type === "GROUP";
-  if (isFrame && (!node.children || node.children.length === 0)) {
+  if (isFrame && (!node.children || node.children.length === 0) && !isInInstance) {
     const lowerName = node.name.toLowerCase();
     const hasFill = node.fills && node.fills.length > 0;
     const h = node.height ?? 0;
