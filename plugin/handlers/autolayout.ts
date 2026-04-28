@@ -8,6 +8,8 @@ interface ChildInfo {
   y: number;
   width: number;
   height: number;
+  type: string;
+  hasChildren: boolean;
   node: SceneNode;
 }
 
@@ -19,6 +21,8 @@ function getVisibleChildren(frame: FrameNode | ComponentNode | GroupNode): Child
       y: Math.round(c.y),
       width: Math.round(c.width),
       height: Math.round(c.height),
+      type: c.type,
+      hasChildren: "children" in c && (c as FrameNode).children.length > 0,
       node: c as SceneNode,
     }));
 }
@@ -120,54 +124,184 @@ function calculatePadding(
   };
 }
 
-function detectAlignment(
-  children: ChildInfo[],
-  direction: "HORIZONTAL" | "VERTICAL",
-  frameSize: number,
-  padding: { top: number; right: number; bottom: number; left: number },
-): "MIN" | "CENTER" | "MAX" | "SPACE_BETWEEN" {
-  if (children.length < 2) return "MIN";
+// ── Alignment detection ──
+// Two separate functions: one for primary (main) axis, one for counter (cross)
+// axis. Operate on positions/sizes only — exported as pure helpers for tests.
 
-  // Check for space-between: first child at start, last at end
-  if (direction === "HORIZONTAL") {
-    const sorted = [...children].sort((a, b) => a.x - b.x);
-    const firstAtStart = sorted[0].x <= padding.left + 2;
-    const lastAtEnd = sorted[sorted.length - 1].x + sorted[sorted.length - 1].width >= frameSize - padding.right - 2;
-    if (firstAtStart && lastAtEnd && children.length >= 3) return "SPACE_BETWEEN";
-  } else {
-    const sorted = [...children].sort((a, b) => a.y - b.y);
-    const firstAtStart = sorted[0].y <= padding.top + 2;
-    const lastAtEnd = sorted[sorted.length - 1].y + sorted[sorted.length - 1].height >= frameSize - padding.bottom - 2;
-    if (firstAtStart && lastAtEnd && children.length >= 3) return "SPACE_BETWEEN";
+export interface AlignmentChild {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface PaddingBox {
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}
+
+const ALIGN_TOL = 2;
+const ALIGN_CENTER_TOL = 4;
+
+export function detectPrimaryAlignment(
+  children: AlignmentChild[],
+  direction: "HORIZONTAL" | "VERTICAL",
+  frameMain: number,
+  padding: PaddingBox,
+): "MIN" | "CENTER" | "MAX" | "SPACE_BETWEEN" {
+  if (children.length === 0) return "MIN";
+
+  const isHoriz = direction === "HORIZONTAL";
+  const padStart = isHoriz ? padding.left : padding.top;
+  const padEnd = isHoriz ? padding.right : padding.bottom;
+
+  const positions = children.map((c) => (isHoriz ? c.x : c.y));
+  const sizes = children.map((c) => (isHoriz ? c.width : c.height));
+
+  let firstIdx = 0;
+  let lastIdx = 0;
+  for (let i = 1; i < positions.length; i++) {
+    if (positions[i] < positions[firstIdx]) firstIdx = i;
+    if (positions[i] > positions[lastIdx]) lastIdx = i;
   }
 
-  // Check cross-axis alignment
-  const crossPositions = direction === "HORIZONTAL"
-    ? children.map((c) => c.y)
-    : children.map((c) => c.x);
+  const firstAtStart = Math.abs(positions[firstIdx] - padStart) <= ALIGN_TOL;
+  const lastAtEnd =
+    Math.abs(positions[lastIdx] + sizes[lastIdx] - (frameMain - padEnd)) <= ALIGN_TOL;
 
-  const crossSizes = direction === "HORIZONTAL"
-    ? children.map((c) => c.height)
-    : children.map((c) => c.width);
+  if (children.length >= 3 && firstAtStart && lastAtEnd) return "SPACE_BETWEEN";
+  if (firstAtStart) return "MIN";
+  if (lastAtEnd) return "MAX";
 
-  const containerCross = direction === "HORIZONTAL"
-    ? frameSize  // actually need height but this is simplified
-    : frameSize;
-
-  // All same cross position → MIN alignment
-  const allSameStart = crossPositions.every((p) => Math.abs(p - crossPositions[0]) <= 2);
-  if (allSameStart) return "MIN";
-
-  // Check if centered
-  const contentCross = Math.max(...crossPositions.map((p, i) => p + crossSizes[i])) - Math.min(...crossPositions);
-  const centerOffset = (containerCross - contentCross) / 2;
-  const allCentered = crossPositions.every((p) => {
-    return Math.abs(p - centerOffset) <= 4;
-  });
-  if (allCentered) return "CENTER";
+  // CENTER: bounding box of content centered between paddings
+  const contentStart = positions[firstIdx];
+  const contentEnd = positions[lastIdx] + sizes[lastIdx];
+  const contentMid = (contentStart + contentEnd) / 2;
+  const innerMid = padStart + (frameMain - padStart - padEnd) / 2;
+  if (Math.abs(contentMid - innerMid) <= ALIGN_CENTER_TOL) return "CENTER";
 
   return "MIN";
 }
+
+export function detectCounterAlignment(
+  children: AlignmentChild[],
+  direction: "HORIZONTAL" | "VERTICAL",
+  frameCross: number,
+  padding: PaddingBox,
+): "MIN" | "CENTER" | "MAX" {
+  if (children.length === 0) return "MIN";
+
+  const isHoriz = direction === "HORIZONTAL";
+  // Cross axis is the perpendicular one to direction
+  const padStart = isHoriz ? padding.top : padding.left;
+  const padEnd = isHoriz ? padding.bottom : padding.right;
+
+  const positions = children.map((c) => (isHoriz ? c.y : c.x));
+  const sizes = children.map((c) => (isHoriz ? c.height : c.width));
+
+  // MIN: all start at padStart
+  if (positions.every((p) => Math.abs(p - padStart) <= ALIGN_TOL)) return "MIN";
+
+  // MAX: all end at frameCross - padEnd
+  if (
+    positions.every(
+      (p, i) => Math.abs(p + sizes[i] - (frameCross - padEnd)) <= ALIGN_TOL,
+    )
+  ) {
+    return "MAX";
+  }
+
+  // CENTER: each child's mid-point ≈ inner cross center
+  const innerCenter = padStart + (frameCross - padStart - padEnd) / 2;
+  if (
+    positions.every(
+      (p, i) => Math.abs(p + sizes[i] / 2 - innerCenter) <= ALIGN_CENTER_TOL,
+    )
+  ) {
+    return "CENTER";
+  }
+
+  return "MIN";
+}
+
+// ── Child sizing decision ──
+// Per spec: children of an Auto Layout frame must NEVER carry FIXED pixel
+// widths/heights — only FILL or HUG. Exception: nodes that cannot hug content
+// (empty Frames, RECTANGLE/ELLIPSE/VECTOR shapes) would collapse to 0×0 if
+// set to HUG, so they fall back to FIXED. This is documented and intentional.
+
+export function canHugContent(type: string, hasChildren: boolean): boolean {
+  if (type === "TEXT") return true;
+  if (type === "INSTANCE") return true;
+  return hasChildren;
+}
+
+export interface ChildSizingInput {
+  width: number;
+  height: number;
+  type: string;
+  hasChildren: boolean;
+}
+
+const FILL_TOL = 4;
+
+export function decideChildSizing(
+  child: ChildSizingInput,
+  direction: "HORIZONTAL" | "VERTICAL",
+  innerWidth: number,
+  innerHeight: number,
+): { horizontal: "FILL" | "HUG" | "FIXED"; vertical: "FILL" | "HUG" | "FIXED" } {
+  const canHug = canHugContent(child.type, child.hasChildren);
+  const fallback: "HUG" | "FIXED" = canHug ? "HUG" : "FIXED";
+
+  let horizontal: "FILL" | "HUG" | "FIXED";
+  let vertical: "FILL" | "HUG" | "FIXED";
+
+  if (direction === "HORIZONTAL") {
+    // main = horizontal, cross = vertical
+    horizontal = fallback;
+    vertical = Math.abs(child.height - innerHeight) <= FILL_TOL ? "FILL" : fallback;
+  } else {
+    // main = vertical, cross = horizontal
+    vertical = fallback;
+    horizontal = Math.abs(child.width - innerWidth) <= FILL_TOL ? "FILL" : fallback;
+  }
+
+  return { horizontal, vertical };
+}
+
+// ── Gap variance ──
+// Gap between adjacent children along the main axis. Returns the spread
+// (max gap − min gap). Used to detect "value-pinned-right" patterns: when
+// SPACE_BETWEEN is geometrically detected but gaps are actually uneven,
+// converting would reflow children (e.g. center a label that was originally
+// next to its icon). Such candidates are skipped instead of converted.
+
+export function gapVariance(
+  children: AlignmentChild[],
+  direction: "HORIZONTAL" | "VERTICAL",
+): number {
+  if (children.length < 3) return 0;
+  const sorted =
+    direction === "HORIZONTAL"
+      ? [...children].sort((a, b) => a.x - b.x)
+      : [...children].sort((a, b) => a.y - b.y);
+  const gaps: number[] = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = sorted[i - 1];
+    const curr = sorted[i];
+    const g =
+      direction === "HORIZONTAL"
+        ? curr.x - (prev.x + prev.width)
+        : curr.y - (prev.y + prev.height);
+    gaps.push(Math.round(g));
+  }
+  return Math.max(...gaps) - Math.min(...gaps);
+}
+
+const SPACE_BETWEEN_GAP_TOL = 8;
 
 function calculateConfidence(
   children: ChildInfo[],
@@ -286,9 +420,24 @@ function analyzeFrame(
     { width: Math.round(frame.width), height: Math.round(frame.height) },
     children,
   );
-  const frameSize = direction === "HORIZONTAL" ? Math.round(frame.height) : Math.round(frame.width);
-  const alignment = detectAlignment(children, direction, frameSize, padding);
+  const frameMain = direction === "HORIZONTAL" ? Math.round(frame.width) : Math.round(frame.height);
+  const alignment = detectPrimaryAlignment(children, direction, frameMain, padding);
   const confidence = calculateConfidence(children, direction, gap);
+
+  // Skip "value-pinned-right" patterns: SPACE_BETWEEN is geometrically detected
+  // (first child at start, last at end) but gaps are very uneven, suggesting
+  // the design is really MIN-aligned content with the last item pinned to the
+  // far edge. Auto Layout can't preserve this without restructuring (e.g.
+  // wrapping the first N children in a group), so we leave the frame untouched.
+  if (alignment === "SPACE_BETWEEN" && gapVariance(children, direction) > SPACE_BETWEEN_GAP_TOL) {
+    skipped.push({
+      nodeId: node.id,
+      name: node.name,
+      reason:
+        "Uneven gaps suggest a 'value-pinned-right' pattern — group related children manually first, then re-scan",
+    });
+    return;
+  }
 
   // Only include if confidence is high enough
   if (confidence < 0.6) {
@@ -323,6 +472,11 @@ function applyAutoLayout(nodeIds: Set<string>): number {
   const selection = figma.currentPage.selection;
   if (selection.length === 0) return 0;
 
+  // Per spec, ONLY the user-selected outermost frame is allowed to keep FIXED
+  // sizing. Everything inside must be FILL or HUG. The outermost is selection[0]
+  // (and only if it's a candidate; otherwise no candidate is "outermost").
+  const outermostId = selection[0].id;
+
   function collectNodes(node: SceneNode, depth: number) {
     if (nodeIds.has(node.id) && (node.type === "FRAME" || node.type === "COMPONENT")) {
       nodesToConvert.push({ node: node as FrameNode, depth });
@@ -339,80 +493,129 @@ function applyAutoLayout(nodeIds: Set<string>): number {
   // Sort: deepest first (bottom-up)
   nodesToConvert.sort((a, b) => b.depth - a.depth);
 
+  // Cache pre-conversion sizes so a parent's children-loop can detect cross-axis
+  // FILL using the child's *original* dimensions, not its post-HUG shrunken size.
+  const origSizes = new Map<string, { width: number; height: number }>();
+
   for (const { node: frame } of nodesToConvert) {
+    // Re-read children at apply time. Bottom-up traversal means inner frames
+    // may have already been converted to Auto Layout in earlier iterations.
     const children = getVisibleChildren(frame);
     if (children.length < 2) continue;
 
     const direction = detectDirection(children);
     if (!direction) continue;
 
+    // Snapshot original frame size BEFORE setting layoutMode.
+    const origWidth = Math.round(frame.width);
+    const origHeight = Math.round(frame.height);
+    origSizes.set(frame.id, { width: origWidth, height: origHeight });
+
     const gap = calculateGap(children, direction);
     const padding = calculatePadding(
-      { width: Math.round(frame.width), height: Math.round(frame.height) },
+      { width: origWidth, height: origHeight },
       children,
     );
-    const frameSize = direction === "HORIZONTAL" ? Math.round(frame.height) : Math.round(frame.width);
-    const alignment = detectAlignment(children, direction, frameSize, padding);
+    const frameMain = direction === "HORIZONTAL" ? origWidth : origHeight;
+    const frameCross = direction === "HORIZONTAL" ? origHeight : origWidth;
+    const primaryAlign = detectPrimaryAlignment(children, direction, frameMain, padding);
+    const counterAlign = detectCounterAlignment(children, direction, frameCross, padding);
 
-    // Apply Auto Layout
+    // ── Set Auto Layout container properties ──
     frame.layoutMode = direction;
     frame.itemSpacing = gap;
     frame.paddingTop = padding.top;
     frame.paddingRight = padding.right;
     frame.paddingBottom = padding.bottom;
     frame.paddingLeft = padding.left;
+    frame.primaryAxisAlignItems = primaryAlign;
+    frame.counterAxisAlignItems = counterAlign;
 
-    // Primary axis alignment
-    if (alignment === "SPACE_BETWEEN") {
-      frame.primaryAxisAlignItems = "SPACE_BETWEEN";
-    } else {
-      frame.primaryAxisAlignItems = alignment;
-    }
+    // ── Children sizing per spec ──
+    // FILL on cross-axis if child matches frame's inner cross, else HUG (or
+    // FIXED only for nodes that can't hug content — empty Frames, RECTANGLE,
+    // VECTOR, etc. — which would collapse to 0×0). Main axis prefers HUG.
+    const innerWidth = origWidth - padding.left - padding.right;
+    const innerHeight = origHeight - padding.top - padding.bottom;
 
-    // Counter axis: center if children are centered, else MIN
-    frame.counterAxisAlignItems = "MIN";
-    const crossPositions = direction === "HORIZONTAL"
-      ? children.map((c) => c.y)
-      : children.map((c) => c.x);
-    const allSameCross = crossPositions.every((p) => Math.abs(p - crossPositions[0]) <= 2);
-    if (!allSameCross) {
-      // Check if centered
-      const crossSizes = direction === "HORIZONTAL"
-        ? children.map((c) => c.height)
-        : children.map((c) => c.width);
-      const maxCross = Math.max(...crossSizes);
-      const allCentered = children.every((c, i) => {
-        const expectedCenter = (maxCross - crossSizes[i]) / 2;
-        return Math.abs(crossPositions[i] - crossPositions[0] - expectedCenter) <= 4;
-      });
-      if (allCentered) {
-        frame.counterAxisAlignItems = "CENTER";
+    for (const childInfo of children) {
+      const child = childInfo.node;
+      if (!("layoutSizingHorizontal" in child)) continue;
+
+      // Use original size for already-converted descendants (their current size
+      // may have shrunk after HUG was applied in their own apply-step).
+      const childOrig = origSizes.get(child.id);
+      const childWidth = childOrig?.width ?? childInfo.width;
+      const childHeight = childOrig?.height ?? childInfo.height;
+
+      const sizing = decideChildSizing(
+        {
+          width: childWidth,
+          height: childHeight,
+          type: childInfo.type,
+          hasChildren: childInfo.hasChildren,
+        },
+        direction,
+        innerWidth,
+        innerHeight,
+      );
+
+      try {
+        (child as FrameNode).layoutSizingHorizontal = sizing.horizontal;
+        (child as FrameNode).layoutSizingVertical = sizing.vertical;
+      } catch {
+        // Some node types reject certain sizing modes (e.g. rotated nodes).
       }
     }
 
-    // Set frame sizing to hug contents
-    frame.layoutSizingHorizontal = "HUG";
-    frame.layoutSizingVertical = "HUG";
-
-    // Preserve original frame size if it was larger than hug
-    const origWidth = Math.round(frame.width);
-    const origHeight = Math.round(frame.height);
-
-    // Set children sizing: FIXED by default (preserve their sizes)
-    for (const child of frame.children) {
-      if ("layoutSizingHorizontal" in child) {
-        (child as FrameNode).layoutSizingHorizontal = "FIXED";
-        (child as FrameNode).layoutSizingVertical = "FIXED";
-      }
-    }
-
-    // If frame was a specific size, restore it with FIXED
-    if (frame.layoutMode === "HORIZONTAL" && origWidth > 0) {
+    // ── Frame self-sizing ──
+    // Per spec: ONLY the user-selected outermost frame keeps FIXED. Everything
+    // else must be FILL or HUG.
+    if (frame.id === outermostId) {
       frame.layoutSizingHorizontal = "FIXED";
-      frame.resize(origWidth, origHeight);
-    } else if (frame.layoutMode === "VERTICAL" && origHeight > 0) {
       frame.layoutSizingVertical = "FIXED";
       frame.resize(origWidth, origHeight);
+    } else {
+      // Non-outermost: try to size relative to the parent (if parent has Auto
+      // Layout already — e.g. a pre-existing AL frame the user manually set up).
+      // If parent is a candidate, it hasn't been applied yet (bottom-up); its
+      // children-loop will overwrite our HUG default with FILL/HUG when it runs.
+      const parent = frame.parent;
+      const parentHasAL =
+        parent &&
+        "layoutMode" in parent &&
+        (parent as FrameNode).layoutMode &&
+        (parent as FrameNode).layoutMode !== "NONE";
+
+      if (parentHasAL) {
+        const p = parent as FrameNode;
+        const pInnerWidth = Math.round(p.width) - p.paddingLeft - p.paddingRight;
+        const pInnerHeight = Math.round(p.height) - p.paddingTop - p.paddingBottom;
+        const sizing = decideChildSizing(
+          {
+            width: origWidth,
+            height: origHeight,
+            type: frame.type,
+            hasChildren: frame.children.length > 0,
+          },
+          p.layoutMode as "HORIZONTAL" | "VERTICAL",
+          pInnerWidth,
+          pInnerHeight,
+        );
+        try {
+          frame.layoutSizingHorizontal = sizing.horizontal;
+          frame.layoutSizingVertical = sizing.vertical;
+        } catch {
+          frame.layoutSizingHorizontal = "HUG";
+          frame.layoutSizingVertical = "HUG";
+        }
+      } else {
+        // Parent has no AL yet (it's a candidate to be applied later, or it's
+        // not a frame at all). Default HUG-HUG; parent's children-loop will
+        // override if parent is a candidate.
+        frame.layoutSizingHorizontal = "HUG";
+        frame.layoutSizingVertical = "HUG";
+      }
     }
 
     count++;

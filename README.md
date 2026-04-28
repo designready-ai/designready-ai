@@ -28,7 +28,7 @@ Then load in Figma:
 - **Skill Sync** — Prompts instruct Claude to automatically create and maintain a design system skill file that improves with every scan
 - **Design System Profiles** — Import tokens from Figma Variables, Paint Styles, or local components
 - **Batch Mode** — Analyze multiple components with atomic build order (atoms → molecules → organisms)
-- **Auto Layout Fix** — Confidence-based analysis + one-click apply (bottom-up, skips icons/overlaps). Frames below 60% confidence are listed as skipped with the reason (inconsistent spacing, ambiguous direction, overlapping children).
+- **Auto Layout Fix** — Confidence-based analysis + one-click apply (bottom-up, skips icons/overlaps). Frames below 60% confidence are listed as skipped with the reason (inconsistent spacing, ambiguous direction, overlapping children, uneven gaps). Best effort: not every visual layout maps cleanly to Auto Layout — patterns like *icon + label tightly grouped + value pinned right* need a wrapper group that this tool intentionally does not create. Review the result; Cmd+Z is your friend.
 - **Quick Fixes** — Auto-rename generic layers, convert dividers, delete hidden/empty nodes
 - **Atomic Detection** — Classifies components as atom/molecule/organism with dependency tree and build order
 - **Responsive Detection** — Auto-detect viewport variants from sibling frames. Matches name suffixes like `-mobile`, `-tablet`, `-desktop`, `-phone`, `-laptop`, `-xs`/`-sm`/`-md`/`-lg`/`-xl`/`-2xl`/`-3xl`, and common widths (`-375`, `-768`, `-1024`, `-1280`, `-1440`, etc.)
