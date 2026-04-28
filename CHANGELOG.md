@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.1.4] — 2026-04-28
+
+Addresses the two specific issues raised in the v1.1.3 Figma Community re-review (request #1873667).
+
+### Fixed
+- **Rescan button did not actually rescan.** Clicking Rescan re-ran scoring on the cached `SerializedNode` instead of re-fetching the live selection from the plugin sandbox, so any Figma edits made between Scan and Rescan were invisible. Rescan now triggers `refreshSelection()` (mirroring the post-Quick-Fix flow) before re-running the scan; the initial-scan path is unchanged.
+- **"Delete N empty layers" silently reported "0 nodes deleted".** Empty frames inside Component Instances were being flagged as deletable, but instance children are read-only in Figma, so `node.remove()` threw and was silently caught. The empty-frame walk in `scoring-meta.ts` now applies the same `isInInstance` guard that hidden-layer detection already used, so instance-internal empty frames are not flagged as actionable.
+
 ## [1.1.3] — 2026-04-28
 
 Restores manifest fields required for the Figma Community publish to update the existing listing rather than create a new plugin entry.
@@ -73,7 +81,8 @@ Initial public release.
 - Responsive viewport detection from sibling frames
 - Prompt injection protection via sanitisation of layer names and text content
 
-[Unreleased]: https://github.com/designready-ai/designready-ai/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/designready-ai/designready-ai/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/designready-ai/designready-ai/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/designready-ai/designready-ai/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/designready-ai/designready-ai/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/designready-ai/designready-ai/compare/v1.1.0...v1.1.1

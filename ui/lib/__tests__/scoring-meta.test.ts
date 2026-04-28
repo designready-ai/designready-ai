@@ -45,6 +45,20 @@ describe("scoreMeta", () => {
     expect(result.stats.emptyFrames).toBe(1);
   });
 
+  it("does not flag empty frames inside instances as deletable", () => {
+    // Empty frames inside an instance are read-only in Figma and cannot be
+    // removed by the Quick Fix delete button. They must not appear as issues
+    // (regression guard for the "0 nodes deleted" bug).
+    const node = makeNode("instance-wrapper", {
+      width: 375,
+      isInstance: true,
+      children: [makeNode("empty-slot", { type: "FRAME", width: 100, height: 100 })],
+    });
+    const result = scoreMeta(node);
+    expect(result.issues.some((i) => i.id.startsWith("meta-empty-"))).toBe(false);
+    expect(result.stats.emptyFrames).toBe(0);
+  });
+
   it("detects divider frames", () => {
     const node = makeNode("section", {
       width: 375,

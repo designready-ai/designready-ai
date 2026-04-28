@@ -48,7 +48,16 @@ export function App() {
   }, [selectedNode, selectionName, reset, batchReset, scan, activeProfile]);
 
   const handleScan = () => {
-    if (selectedNode) scan(selectedNode, activeProfile);
+    if (!selectedNode) return;
+    if (result) {
+      // Rescan: re-fetch fresh selection from the plugin so edits made in Figma
+      // since the last scan are picked up. The useEffect on selectedNode picks
+      // up pendingRescanRef and triggers scan() with the fresh node.
+      pendingRescanRef.current = true;
+      refreshSelection();
+      return;
+    }
+    scan(selectedNode, activeProfile);
   };
 
   const handleBatchScan = () => batchScan(activeProfile);
