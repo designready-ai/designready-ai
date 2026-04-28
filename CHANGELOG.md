@@ -6,6 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Version
 
 ## [Unreleased]
 
+## [1.1.5] — 2026-04-28
+
+Auto Layout Fix overhaul to comply with the user-stated spec: only the outermost user-selected frame keeps FIXED sizing, everything inside must be FILL or HUG. The previous implementation set every child to FIXED pixel widths, which broke responsive intent and produced brittle layouts.
+
+### Fixed
+- **Children of converted frames are no longer set to FIXED pixel sizes.** New `decideChildSizing` helper picks FILL on the cross-axis when a child matches its parent's inner cross size, otherwise HUG. FIXED is used only as a fallback for shapes that would collapse to 0×0 (RECTANGLE/ELLIPSE/VECTOR with no children).
+- **Frame self-sizing now distinguishes outermost vs nested.** Only `selection[0]` (the user-selected outermost frame) keeps FIXED+original size. Non-outermost candidates either inherit from their parent's Auto Layout (via `decideChildSizing` relative to the parent) or default to HUG-HUG, which gets overridden when the parent's apply-step runs its own children loop. An `origSizes` map caches pre-conversion frame sizes so a parent's FILL detection uses each child's original dimensions, not its post-HUG shrunken size.
+- **Counter-axis (cross-axis) alignment is now detected correctly.** The previous `detectAlignment` mixed primary and counter axes and had a documented "simplified" `containerCross` that was wrong for VERTICAL direction. Replaced with separated `detectPrimaryAlignment` and `detectCounterAlignment` helpers that compute per-axis math correctly.
+- **"Value-pinned-right" patterns are now skipped instead of converted destructively.** When SPACE_BETWEEN is geometrically detected (first child at start, last at end) but gaps between adjacent children are very uneven (>8px spread), the conversion would reflow the children — for example, centering a label that was originally next to its icon. New `gapVariance` helper detects this; `analyzeFrame` now skips with the reason `Uneven gaps suggest a 'value-pinned-right' pattern — group related children manually first, then re-scan`.
+
+### Changed
+- Auto Layout Fix UI description and success message set realistic expectations: *"Best effort — Cmd+Z if a layout shifts unexpectedly."* README has a matching limitations note explaining that patterns like *icon + label tightly grouped + value pinned right* need a wrapper group that this tool intentionally does not create.
+
+### Added
+- 30 pure-function unit tests covering `canHugContent`, `decideChildSizing` (HORIZONTAL + VERTICAL), `detectPrimaryAlignment` (MIN / CENTER / MAX / SPACE_BETWEEN incl. n<3 ambiguity), `detectCounterAlignment` (MIN / CENTER / MAX with padding), and `gapVariance` (equal gaps, uneven value-pinned-right, vertical direction).
+
 ## [1.1.4] — 2026-04-28
 
 Addresses the two specific issues raised in the v1.1.3 Figma Community re-review (request #1873667).
@@ -81,7 +97,8 @@ Initial public release.
 - Responsive viewport detection from sibling frames
 - Prompt injection protection via sanitisation of layer names and text content
 
-[Unreleased]: https://github.com/designready-ai/designready-ai/compare/v1.1.4...HEAD
+[Unreleased]: https://github.com/designready-ai/designready-ai/compare/v1.1.5...HEAD
+[1.1.5]: https://github.com/designready-ai/designready-ai/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/designready-ai/designready-ai/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/designready-ai/designready-ai/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/designready-ai/designready-ai/compare/v1.1.1...v1.1.2
