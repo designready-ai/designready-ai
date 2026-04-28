@@ -89,7 +89,9 @@ export function AutoLayoutFix({ hasSelection, onApplied, embedded, initialCandid
         </div>
       )}
       <p className={styles.description}>
-        Detect frames without Auto Layout and safely convert them.
+        Detect frames without Auto Layout and convert them. Best effort — some
+        layouts (like a value pinned to the right edge) need manual grouping
+        first. Press Cmd+Z if a result shifts unexpectedly.
       </p>
 
       {!analyzed && (
@@ -104,7 +106,7 @@ export function AutoLayoutFix({ hasSelection, onApplied, embedded, initialCandid
 
       {appliedCount !== null && (
         <div className={styles.success}>
-          Converted {appliedCount} frame{appliedCount !== 1 ? "s" : ""} to Auto Layout
+          Converted {appliedCount} frame{appliedCount !== 1 ? "s" : ""}. Review the result and press Cmd+Z if a layout shifted unexpectedly.
         </div>
       )}
 
